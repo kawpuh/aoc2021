@@ -165,11 +165,14 @@
                            (s/split #",")))
             boards (->> (rest lines)
                         (partition 5)
-                        (map #(map (fn [row]
-                                     (map read-string
-                                          (-> row
-                                              s/trim
-                                              (s/split #"\s+")))) %)))]
+                        (map (fn [board]
+                               (map
+                                 (fn [row]
+                                   (map read-string
+                                        (-> row
+                                            s/trim
+                                            (s/split #"\s+"))))
+                                 board))))]
         (loop [played-boards boards
                rem-calls calls]
           (let [call (first rem-calls)
@@ -180,6 +183,63 @@
               (recur rem-boards
                      (rest rem-calls))))))))
 
+(defn day5-part1 []
+  (let [input (slurp "test5.txt")
+        lines (->> input
+                   s/split-lines
+                   (map #(->> (s/split % #" -> ")
+                              (map s/trim)
+                              (map (fn [point] (map read-string (s/split point #",")))))))
+        lines (filter (fn [[[from-x from-y] [to-x to-y]]]
+                        (or (= from-x to-x)
+                            (= from-y to-y)))
+                      lines)
+        lines-as-points (for [[[x1 y1] [x2 y2]] lines]
+                          (let [[from-x to-x] (sort [x1 x2])
+                                [from-y to-y] (sort [y1 y2])]
+                            (for
+                              [x (range from-x (inc to-x))
+                               y (range from-y (inc to-y))]
+                              (list x y))))]
+    (->> lines-as-points
+         (reduce concat)
+         frequencies
+         (filter (fn [[_k v]] (>= v 2)))
+         count)))
+
+(defn day5-part2 []
+  (let [input (slurp "day5.txt")
+        lines (->> input
+                   s/split-lines
+                   (map #(->> (s/split % #" -> ")
+                              (map s/trim)
+                              (map (fn [point] (map read-string (s/split point #",")))))))
+        {ortho-lines true
+         diagonals false} (group-by (fn [[[from-x from-y] [to-x to-y]]]
+                                      (or (= from-x to-x)
+                                          (= from-y to-y)))
+                                    lines)
+        diagonals-as-points (for [[[x1 y1] [x2 y2]] diagonals]
+                              (let [inc-x (if (> x2 x1) 1 -1)
+                                    inc-y (if (> y2 y1) 1 -1)]
+                                (take (inc (Math/abs (- x2 x1)))
+                                      (iterate (fn [[x y]] (list (+ x inc-x)
+                                                                 (+ y inc-y)))
+                                               (list x1 y1)))))
+        ortho-lines-as-points (for [[[x1 y1] [x2 y2]] ortho-lines]
+                                (let [[from-x to-x] (sort [x1 x2])
+                                      [from-y to-y] (sort [y1 y2])]
+                                  (for
+                                    [x (range from-x (inc to-x))
+                                     y (range from-y (inc to-y))]
+                                    (list x y))))]
+    (->> (concat ortho-lines-as-points diagonals-as-points)
+         (reduce concat)
+         frequencies
+         (filter (fn [[_k v]] (>= v 2)))
+         count)))
+
 (defn -main
   [& args]
-  (println (day4-part2)))
+  (println (day5-part1))
+  (println (day5-part2)))
