@@ -8,7 +8,7 @@
         ans (->> (map < (butlast depths) (rest depths))
                  (filter identity)
                  (count))]
-    (println ans)))
+    ans))
 
 (defn day1-part2 []
   (let [corpus (slurp "day1.txt")
@@ -17,7 +17,7 @@
         ans (->> (map < (butlast windows) (rest windows))
                  (filter identity)
                  (count))]
-    (println ans)))
+    ans))
 
 (defn day2-part1 []
   (let [input (slurp "day2.txt")
@@ -53,11 +53,70 @@
           cmds)]
     (* final-horiz final-depth)))
 
+(defn day3-part1 []
+  (let [input (slurp "day3.txt")
+        report (s/split-lines input)
+        gamma-rate (->> (apply map vector report)
+                        (map frequencies)
+                        (map #(first (apply max-key val %)))
+                        (apply str)
+                        (str "2r")
+                       read-string)
+        epsilon-rate (->> (apply map vector report)
+                          (map frequencies)
+                          (map #(first (apply min-key val %)))
+                          (apply str)
+                          (str "2r")
+                          read-string)]
+  (* epsilon-rate gamma-rate)))
+
+
+(defn day3-part2 []
+  (let [input (slurp "day3.txt")
+        report (s/split-lines input)
+        gen-rating (loop [rem-options (map str report)
+                          n (count (first report))
+                          acc ""]
+                     (if (= n 0)
+                       acc
+                       (let [bit-counts (->> rem-options
+                                             (apply map vector)
+                                             (map frequencies)
+                                             first)
+                             bit-criteria (if (> (get bit-counts \0 0)
+                                                 (get bit-counts \1 0)) \0 \1)]
+                         (recur (->> rem-options
+                                     (filter #(= bit-criteria (first %)))
+                                     (map rest))
+                                (dec n)
+                                (str acc bit-criteria)))))
+        scrub-rating (loop [rem-options (map str report)
+                            n (count (first report))
+                            acc ""]
+                       (if (= n 0)
+                         acc
+                         (let [bit-counts (->> rem-options
+                                               (apply map vector)
+                                               (map frequencies)
+                                               first)
+                               bit-criteria (cond
+                                              (= 0 (get bit-counts \0 0)) \1
+                                              (= 0 (get bit-counts \1 0)) \0
+                                              (< (get bit-counts \1 0)
+                                                 (get bit-counts \0 0)) \1
+                                              :else
+                                              \0)]
+                           (recur (->> rem-options
+                                       (filter #(= bit-criteria (first %)))
+                                       (map rest))
+                                  (dec n)
+                                  (str acc bit-criteria)))))
+        gen-rating (read-string (str "2r" gen-rating))
+        scrub-rating (read-string (str "2r" scrub-rating))]
+    (* gen-rating scrub-rating)))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  ; (day1-part1)
-  ; (day1-part2)
-  (println (day2-part1))
-  (println (day2-part2))
-  )
+  (println (day3-part1))
+  (println (day3-part2)))
