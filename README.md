@@ -3,7 +3,9 @@
 FIXME: my new application.
 
 Run with:
-    $ make run
+
+``$ make run``
 
 Live-reloading with:
-    $ make watch
+
+``$ make watch``
