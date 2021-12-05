@@ -115,8 +115,71 @@
         scrub-rating (read-string (str "2r" scrub-rating))]
     (* gen-rating scrub-rating)))
 
+
+  (letfn [(winning-board [board]
+             (let [conds (concat board (apply map list board))]
+               (if (seq (filter (fn [win-con] (every? #(= \x %) win-con)) conds))
+                 board
+                 false)))
+          (bingo-call [boards n]
+            (for [board boards]
+              (for [row board]
+                (for [entry row]
+                  (if (= entry n)
+                    \x
+                    entry)))))
+          (compute-soln [board n]
+            (println board)
+            (println n)
+            (* n (apply + (apply concat (map #(filter number? %) board)))))]
+    (defn day4-part1 []
+      (let [input (slurp "day4.txt")
+            lines (->> (s/split-lines input)
+                       (filter seq))
+            calls (map read-string
+                       (-> (first lines)
+                           (s/split #",")))
+            boards (->> (rest lines)
+                        (partition 5)
+                        (map #(map (fn [row]
+                                     (map read-string
+                                          (-> row
+                                              s/trim
+                                              (s/split #"\s+")))) %)))]
+        (loop [played-boards boards
+               rem-calls calls]
+          (let [call (first rem-calls)
+                after-call (bingo-call played-boards call)
+                soln-board (some winning-board after-call)]
+            (if (some? soln-board)
+              (compute-soln soln-board call)
+              (recur after-call
+                     (rest rem-calls)))))))
+
+    (defn day4-part2 []
+      (let [input (slurp "day4.txt")
+            lines (->> (s/split-lines input)
+                       (filter seq))
+            calls (map read-string
+                       (-> (first lines)
+                           (s/split #",")))
+            boards (->> (rest lines)
+                        (partition 5)
+                        (map #(map (fn [row]
+                                     (map read-string
+                                          (-> row
+                                              s/trim
+                                              (s/split #"\s+")))) %)))]
+        (loop [played-boards boards
+               rem-calls calls]
+          (let [call (first rem-calls)
+                after-call (bingo-call played-boards call)
+                rem-boards (remove winning-board after-call)]
+            (if (= 0 (count rem-boards))
+              (compute-soln (first after-call) call)
+              (recur rem-boards
+                     (rest rem-calls))))))))
+
 (defn -main
-  "I don't do a whole lot ... yet."
   [& args]
-  (println (day3-part1))
-  (println (day3-part2)))
+  (println (day4-part2)))
