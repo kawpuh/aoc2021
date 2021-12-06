@@ -1,5 +1,6 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        net.mikera/core.matrix {:mvn/version "0.62.0"}}
  :aliases
  {:run-m {:main-opts ["-m" "aoc2021.aoc2021"]}
   :run-x {:ns-default aoc2021.aoc2021

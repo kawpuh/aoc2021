@@ -1,5 +1,6 @@
 (ns aoc2021.aoc2021
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as s]
+            [clojure.core.matrix :as m])
   (:gen-class))
 
 (defn day1-part1 []
@@ -27,13 +28,13 @@
                                 (Integer/parseInt (second %)))))
         [final-horiz final-depth]
         (reduce
-          (fn [[horiz depth] [instr n]]
-            (case instr
-              :forward [(+ n horiz) depth]
-              :down [horiz (+ depth n)]
-              :up [horiz (- depth n)]))
-          [0 0]
-          cmds)]
+         (fn [[horiz depth] [instr n]]
+           (case instr
+             :forward [(+ n horiz) depth]
+             :down [horiz (+ depth n)]
+             :up [horiz (- depth n)]))
+         [0 0]
+         cmds)]
     (* final-horiz final-depth)))
 
 (defn day2-part2 []
@@ -44,13 +45,13 @@
                                 (Integer/parseInt (second %)))))
         [final-horiz final-depth _final-aim]
         (reduce
-          (fn [[horiz depth aim] [instr n]]
-            (case instr
-              :forward [(+ n horiz) (+ depth (* n aim)) aim]
-              :down [horiz depth (+ aim n)]
-              :up [horiz depth (- aim n)]))
-          [0 0 0]
-          cmds)]
+         (fn [[horiz depth aim] [instr n]]
+           (case instr
+             :forward [(+ n horiz) (+ depth (* n aim)) aim]
+             :down [horiz depth (+ aim n)]
+             :up [horiz depth (- aim n)]))
+         [0 0 0]
+         cmds)]
     (* final-horiz final-depth)))
 
 (defn day3-part1 []
@@ -61,15 +62,14 @@
                         (map #(first (apply max-key val %)))
                         (apply str)
                         (str "2r")
-                       read-string)
+                        read-string)
         epsilon-rate (->> (apply map vector report)
                           (map frequencies)
                           (map #(first (apply min-key val %)))
                           (apply str)
                           (str "2r")
                           read-string)]
-  (* epsilon-rate gamma-rate)))
-
+    (* epsilon-rate gamma-rate)))
 
 (defn day3-part2 []
   (let [input (slurp "day3.txt")
@@ -115,73 +115,72 @@
         scrub-rating (read-string (str "2r" scrub-rating))]
     (* gen-rating scrub-rating)))
 
-
-  (letfn [(winning-board [board]
-             (let [conds (concat board (apply map list board))]
-               (if (seq (filter (fn [win-con] (every? #(= \x %) win-con)) conds))
-                 board
-                 false)))
-          (bingo-call [boards n]
-            (for [board boards]
-              (for [row board]
-                (for [entry row]
-                  (if (= entry n)
-                    \x
-                    entry)))))
-          (compute-soln [board n]
-            (println board)
-            (println n)
-            (* n (apply + (apply concat (map #(filter number? %) board)))))]
-    (defn day4-part1 []
-      (let [input (slurp "day4.txt")
-            lines (->> (s/split-lines input)
-                       (filter seq))
-            calls (map read-string
-                       (-> (first lines)
-                           (s/split #",")))
-            boards (->> (rest lines)
-                        (partition 5)
-                        (map #(map (fn [row]
-                                     (map read-string
-                                          (-> row
-                                              s/trim
-                                              (s/split #"\s+")))) %)))]
-        (loop [played-boards boards
-               rem-calls calls]
-          (let [call (first rem-calls)
-                after-call (bingo-call played-boards call)
-                soln-board (some winning-board after-call)]
-            (if (some? soln-board)
-              (compute-soln soln-board call)
-              (recur after-call
-                     (rest rem-calls)))))))
-
-    (defn day4-part2 []
-      (let [input (slurp "day4.txt")
-            lines (->> (s/split-lines input)
-                       (filter seq))
-            calls (map read-string
-                       (-> (first lines)
-                           (s/split #",")))
-            boards (->> (rest lines)
-                        (partition 5)
-                        (map (fn [board]
-                               (map
-                                 (fn [row]
+(letfn [(winning-board [board]
+          (let [conds (concat board (apply map list board))]
+            (if (seq (filter (fn [win-con] (every? #(= \x %) win-con)) conds))
+              board
+              false)))
+        (bingo-call [boards n]
+          (for [board boards]
+            (for [row board]
+              (for [entry row]
+                (if (= entry n)
+                  \x
+                  entry)))))
+        (compute-soln [board n]
+          (println board)
+          (println n)
+          (* n (apply + (apply concat (map #(filter number? %) board)))))]
+  (defn day4-part1 []
+    (let [input (slurp "day4.txt")
+          lines (->> (s/split-lines input)
+                     (filter seq))
+          calls (map read-string
+                     (-> (first lines)
+                         (s/split #",")))
+          boards (->> (rest lines)
+                      (partition 5)
+                      (map #(map (fn [row]
                                    (map read-string
                                         (-> row
                                             s/trim
-                                            (s/split #"\s+"))))
-                                 board))))]
-        (loop [played-boards boards
-               rem-calls calls]
-          (let [call (first rem-calls)
-                after-call (bingo-call played-boards call)
-                rem-boards (remove winning-board after-call)]
-            (if (= 0 (count rem-boards))
-              (compute-soln (first after-call) call)
-              (recur rem-boards
-                     (rest rem-calls))))))))
+                                            (s/split #"\s+")))) %)))]
+      (loop [played-boards boards
+             rem-calls calls]
+        (let [call (first rem-calls)
+              after-call (bingo-call played-boards call)
+              soln-board (some winning-board after-call)]
+          (if (some? soln-board)
+            (compute-soln soln-board call)
+            (recur after-call
+                   (rest rem-calls)))))))
+
+  (defn day4-part2 []
+    (let [input (slurp "day4.txt")
+          lines (->> (s/split-lines input)
+                     (filter seq))
+          calls (map read-string
+                     (-> (first lines)
+                         (s/split #",")))
+          boards (->> (rest lines)
+                      (partition 5)
+                      (map (fn [board]
+                             (map
+                              (fn [row]
+                                (map read-string
+                                     (-> row
+                                         s/trim
+                                         (s/split #"\s+"))))
+                              board))))]
+      (loop [played-boards boards
+             rem-calls calls]
+        (let [call (first rem-calls)
+              after-call (bingo-call played-boards call)
+              rem-boards (remove winning-board after-call)]
+          (if (= 0 (count rem-boards))
+            (compute-soln (first after-call) call)
+            (recur rem-boards
+                   (rest rem-calls))))))))
 
 (defn day5-part1 []
   (let [input (slurp "test5.txt")
@@ -198,8 +197,8 @@
                           (let [[from-x to-x] (sort [x1 x2])
                                 [from-y to-y] (sort [y1 y2])]
                             (for
-                              [x (range from-x (inc to-x))
-                               y (range from-y (inc to-y))]
+                             [x (range from-x (inc to-x))
+                              y (range from-y (inc to-y))]
                               (list x y))))]
     (->> lines-as-points
          (reduce concat)
@@ -230,8 +229,8 @@
                                 (let [[from-x to-x] (sort [x1 x2])
                                       [from-y to-y] (sort [y1 y2])]
                                   (for
-                                    [x (range from-x (inc to-x))
-                                     y (range from-y (inc to-y))]
+                                   [x (range from-x (inc to-x))
+                                    y (range from-y (inc to-y))]
                                     (list x y))))]
     (->> (concat ortho-lines-as-points diagonals-as-points)
          (reduce concat)
@@ -239,7 +238,37 @@
          (filter (fn [[_k v]] (>= v 2)))
          count)))
 
+(def day6-test "3,4,3,1,2")
+
+(defn day6-part1 []
+  (let [input (slurp "day6.txt")
+        fishes (map read-string (s/split input #","))
+        inc-day #(reduce (fn [acc fish-num]
+                           (if (= 0 fish-num)
+                             (conj acc 6 8)
+                             (conj acc (dec fish-num))))
+                         []
+                         %)]
+    (count (nth (iterate inc-day fishes) 80))))
+
+(defn day6-part2 []
+  (let [input (slurp "day6.txt")
+        fishes (map read-string (s/split input #","))
+        fish-arr (m/array (let [counts (frequencies fishes)]
+                            (for [i (range 9)]
+                              (get counts i 0))))
+        inc-mat (m/matrix [[0 0 0 0 0 0 1 0 1]
+                           [1 0 0 0 0 0 0 0 0]
+                           [0 1 0 0 0 0 0 0 0]
+                           [0 0 1 0 0 0 0 0 0]
+                           [0 0 0 1 0 0 0 0 0]
+                           [0 0 0 0 1 0 0 0 0]
+                           [0 0 0 0 0 1 0 0 0]
+                           [0 0 0 0 0 0 1 0 0]
+                           [0 0 0 0 0 0 0 1 0]])]
+    (reduce + (nth (iterate #(m/mmul % inc-mat) fish-arr) 256))))
+
 (defn -main
   [& args]
-  (println (day5-part1))
-  (println (day5-part2)))
+  ; (println (day6-part1))
+  (println (day6-part2)))
