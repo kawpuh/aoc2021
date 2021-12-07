@@ -268,7 +268,25 @@
                            [0 0 0 0 0 0 0 1 0]])]
     (reduce + (nth (iterate #(m/mmul % inc-mat) fish-arr) 256))))
 
+(def day7-test "16,1,2,0,4,2,7,1,2,14")
+
+(defn day7-part1 []
+  (let [input (slurp "day7.txt")
+        posns (map read-string (s/split input #","))
+        median (-> (sort posns)
+                   (nth (Math/ceil (/ (count posns) 2))))]
+    (reduce + (map #(Math/abs (- median %)) posns))))
+
+(defn day7-part2 []
+  (let [input (slurp "day7.txt")
+        posns (map read-string (s/split input #","))
+        gauss (fn [n] (/ (* (inc n) n) 2))]
+    (apply min
+      (map second
+           (for [i (range (inc (apply max posns)))]
+             [i (reduce + (map #(gauss (Math/abs (- % i))) posns))])))))
+
 (defn -main
   [& args]
-  ; (println (day6-part1))
-  (println (day6-part2)))
+  ; (println (day7-part1))
+  (println (day7-part2)))
