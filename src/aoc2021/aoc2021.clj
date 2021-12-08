@@ -1,6 +1,7 @@
 (ns aoc2021.aoc2021
   (:require [clojure.string :as s]
-            [clojure.core.matrix :as m])
+            [clojure.core.matrix :as m]
+            [clojure.set :as st])
   (:gen-class))
 
 (defn day1-part1 []
@@ -286,7 +287,90 @@
            (for [i (range (inc (apply max posns)))]
              [i (reduce + (map #(gauss (Math/abs (- % i))) posns))])))))
 
+(def day8-test "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+               edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+               fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+               fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+               aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+               fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+               dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+               bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+               egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+               gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce")
+
+(defn day8-part1 []
+  (let [input (slurp "day8.txt")
+        lines (s/split-lines input)
+        signals (map (fn [line]
+                       (->> (s/split line #" \| ")
+                            (map #(s/split % #" "))
+                            (map (fn [arr] (map (fn [s] (set (seq s))) arr))))) lines)
+        translate
+        (fn [[num-displays message]]
+          (let [one (first (filter #(= (count %) 2) num-displays))
+                seven (first (filter #(= (count %) 3) num-displays))
+                four (first (filter #(= (count %) 4) num-displays))
+                three (first (filter #(and (= (count %) 5) (st/superset? % one)) num-displays))
+                two (first (filter #(and (= (count %) 5)
+                                         (= (count (st/intersection four %)) 2))
+                                   num-displays))
+                five (first (filter #(and (= (count %) 5)
+                                          (= (count (st/intersection four %)) 3)) num-displays))
+                eight (first (filter #(= (count %) 7) num-displays))
+                six (first (filter #(and (= (count %) 6) (not (st/superset? % one))) num-displays))
+                nine (first (filter #(and (= (count %) 6) (st/superset? % four)) num-displays))
+                zero (first (filter #(and (= (count %) 6) (not (st/superset? % four))) num-displays))]
+            (reduce + (vals (select-keys (frequencies message) [one four seven eight])))))]
+    (reduce + (map translate signals))
+    ))
+
+(defn day8-part2 []
+  (let [input
+        (slurp "day8.txt")
+        lines (s/split-lines input)
+        signals (map (fn [line]
+                       (->> (s/split line #" \| ")
+                            (map #(s/split % #" "))
+                            (map (fn [arr] (map (fn [s] (set (seq s))) arr))))) lines)
+        translate
+        (fn [[num-displays message]]
+          (let [one (first (filter #(= (count %) 2) num-displays))
+                seven (first (filter #(= (count %) 3) num-displays))
+                four (first (filter #(= (count %) 4) num-displays))
+                three (first (filter #(and (= (count %) 5)
+                                           (st/superset? % one)) num-displays))
+                two (first (filter #(and (= (count %) 5)
+                                         (not (st/superset? % one))
+                                         (= (count (st/intersection four %)) 2))
+                                   num-displays))
+                five (first (filter #(and (= (count %) 5)
+                                          (not (st/superset? % one))
+                                          (= (count (st/intersection four %)) 3)) num-displays))
+                eight (first (filter #(= (count %) 7) num-displays))
+                nine (first (filter #(and (= (count %) 6)
+                                          (st/superset? % four)) num-displays))
+                six (first (filter #(and (= (count %) 6)
+                                         (not (st/superset? % one))
+                                         (not (st/superset? % seven))) num-displays))
+                zero (first (filter #(and (= (count %) 6)
+                                          (not (st/superset? % four))
+                                          (st/superset? % seven)) num-displays))
+                num-map {zero 0
+                         one 1
+                         two 2
+                         three 3
+                         four 4
+                         five 5
+                         six 6
+                         seven 7
+                         eight 8
+                         nine 9}]
+            (Integer/parseInt (apply str (map num-map message)))))]
+    (reduce + (map translate signals))
+    ))
+
 (defn -main
   [& args]
-  ; (println (day7-part1))
-  (println (day7-part2)))
+  ; (println (day8-part1))
+  (println (day8-part2)))
+
