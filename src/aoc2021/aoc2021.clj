@@ -376,7 +376,11 @@
 
 (defn day9-part1 []
   (let [input (slurp "day9.txt")
-        lines (vec (map (fn [line] (vec (map #(- (int %) 48) line))) (map s/trim (s/split-lines input))))
+        lines (->> input
+                   s/split-lines
+                   (map s/trim)
+                   (map (fn [line] (vec (map #(- (int %) 48) line))))
+                   vec)
         marked
         (reduce (fn [lows [x y]]
                   (if (reduce (fn [is-lowest op]
