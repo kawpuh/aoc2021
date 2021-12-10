@@ -283,9 +283,9 @@
         posns (map read-string (s/split input #","))
         gauss (fn [n] (/ (* (inc n) n) 2))]
     (apply min
-      (map second
-           (for [i (range (inc (apply max posns)))]
-             [i (reduce + (map #(gauss (Math/abs (- % i))) posns))])))))
+           (map second
+                (for [i (range (inc (apply max posns)))]
+                  [i (reduce + (map #(gauss (Math/abs (- % i))) posns))])))))
 
 (def day8-test "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
                edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
@@ -321,8 +321,7 @@
                 nine (first (filter #(and (= (count %) 6) (st/superset? % four)) num-displays))
                 zero (first (filter #(and (= (count %) 6) (not (st/superset? % four))) num-displays))]
             (reduce + (vals (select-keys (frequencies message) [one four seven eight])))))]
-    (reduce + (map translate signals))
-    ))
+    (reduce + (map translate signals))))
 
 (defn day8-part2 []
   (let [input
@@ -366,11 +365,97 @@
                          eight 8
                          nine 9}]
             (Integer/parseInt (apply str (map num-map message)))))]
-    (reduce + (map translate signals))
-    ))
+    (reduce + (map translate signals))))
+
+(def day9-test
+  "2199943210
+  3987894921
+  9856789892
+  8767896789
+  9899965678")
+
+(defn day9-part1 []
+  (let [input (slurp "day9.txt")
+        lines (vec (map (fn [line] (vec (map #(- (int %) 48) line))) (map s/trim (s/split-lines input))))
+        marked
+        (reduce (fn [lows [x y]]
+                  (if (reduce (fn [is-lowest op]
+                                (if-let [adjacent (get-in lines (case op
+                                                                  :x-add [(inc x) y]
+                                                                  :x-sub [(dec x) y]
+                                                                  :y-add [x (inc y)]
+                                                                  :y-sub [x (dec y)]) false)]
+                                  (and is-lowest (< (get-in lines [x y]) adjacent))
+                                  is-lowest))
+                              true
+                              [:x-add :x-sub :y-add :y-sub])
+                    (conj lows (get-in lines [x y]))
+                    lows))
+                []
+                (for [x (range (count lines))
+                      y (range (count (first lines)))]
+                  [x y]))]
+    (reduce + (map inc marked))))
+
+(defn day9-part2 []
+  (let [input (slurp "day9.txt")
+        lines (->> input
+                   s/split-lines
+                   (map s/trim)
+                   (map (fn [line] (vec (map #(- (int %) 48) line))))
+                   vec)
+        basin-sizes
+        (loop [rem-starts (for [x (range (count lines))
+                                y (range (count (first lines)))]
+                            [x y])
+               basin-sizes []
+               queue []
+               board lines
+               basin-size 0 ]
+          (if (empty? queue)
+            (let [basin-sizes (if (= 0 basin-size) basin-sizes
+                                (conj basin-sizes basin-size))]
+              (if (empty? rem-starts)
+                basin-sizes
+                (recur (rest rem-starts)
+                       basin-sizes
+                       (vector (first rem-starts))
+                       board
+                       0)))
+            (let [[x y] (first queue)
+                  pos (get-in board [x y] \x)]
+              (cond
+                (= pos \x) (recur
+                             rem-starts
+                             basin-sizes
+                             (rest queue)
+                             board
+                             basin-size)
+                (= pos 9) (recur
+                            rem-starts
+                            basin-sizes
+                            (rest queue)
+                            board
+                            basin-size)
+                :else
+                (recur
+                  rem-starts
+                  basin-sizes
+                  (concat [[(inc x) y]
+                           [(dec x) y]
+                           [x (inc y)]
+                           [x (dec y)]]
+                          (rest queue))
+                  (assoc-in board [x y] \x)
+                  (inc basin-size))))))]
+    (->> basin-sizes
+         sort
+         reverse
+         (take 3)
+         (reduce *))))
 
 (defn -main
   [& args]
-  ; (println (day8-part1))
-  (println (day8-part2)))
+  #_(println (day9-part1))
+  (println (day9-part2)))
 
