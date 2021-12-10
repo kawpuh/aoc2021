@@ -458,8 +458,89 @@
          (take 3)
          (reduce *))))
 
+(def day10-test "[({(<(())[]>[[{[]{<()<>>
+                [(()[<>])]({[<{<<[]>>(
+                {([(<{}[<>[]}>{[]{[(<()>
+                (((({<>}<{<{<>}{[]{[]{}
+                [[<[([]))<([[{}[[()]]]
+                [{[{({}]{}}([{[{{{}}([]
+                {<[[]]>}<{[{[{[]{()[[[]
+                [<(<(<(<{}))><([]([]()
+                <{([([[(<>()){}]>(<<{{
+                <{([{{}}[<[[[<>{}]]]>[]]")
+
+(defn day10-part1 []
+  (let [input (slurp "day10.txt")
+        lines (->> input
+                  s/split-lines
+                  (map s/trim))
+        open-set (hash-set \[ \( \{ \<)
+        close-match {\[ \]
+                     \( \)
+                     \{ \}
+                     \< \>}
+        scores {\) 3
+                \] 57
+                \} 1197
+                \> 25137}]
+    (reduce
+      +
+      (map
+        #(loop [stack []
+                input %]
+           (if-let [ch (first input)]
+             (cond
+               (contains? open-set ch) (recur (conj stack ch) (rest input))
+               (= (close-match (peek stack)) ch) (recur (pop stack) (rest input))
+               :else (scores ch))
+             0))
+        lines))))
+
+(defn day10-part2 []
+  (let [input
+        ; day10-test
+        (slurp "day10.txt")
+        lines (->> input
+                   s/split-lines
+                   (map s/trim))
+        open-set (hash-set \[ \( \{ \<)
+        close-match {\[ \]
+                     \( \)
+                     \{ \}
+                     \< \>}
+        scores {\) 1
+                \] 2
+                \} 3
+                \> 4}
+        closing-seqs (remove
+                       nil?
+                       (map
+                         #(loop [stack []
+                                 input %]
+                            (if-let [ch (first input)]
+                              (cond
+                                (contains? open-set ch) (recur
+                                                          (conj stack ch)
+                                                          (rest input))
+                                (= (close-match (peek stack)) ch) (recur
+                                                                    (pop stack)
+                                                                    (rest input))
+                                :else nil)
+                              (->> stack
+                                   reverse
+                                   (map close-match))))
+                         lines))
+        line-scores (map
+                      (fn [closing-seq]
+                        (reduce (fn [running-score ch]
+                                  (+ (scores ch) (* running-score 5)))
+                                0
+                                closing-seq))
+                      closing-seqs)]
+    (nth (sort line-scores) (/ (count line-scores) 2))))
+
 (defn -main
   [& args]
-  #_(println (day9-part1))
-  (println (day9-part2)))
+  ; (println (day10-part1))
+  (println (day10-part2)))
 
