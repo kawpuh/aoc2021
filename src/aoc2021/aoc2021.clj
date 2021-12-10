@@ -475,7 +475,7 @@
                   s/split-lines
                   (map s/trim))
         open-set (hash-set \[ \( \{ \<)
-        close-match {\[ \]
+        open->close {\[ \]
                      \( \)
                      \{ \}
                      \< \>}
@@ -491,20 +491,20 @@
            (if-let [ch (first input)]
              (cond
                (contains? open-set ch) (recur (conj stack ch) (rest input))
-               (= (close-match (peek stack)) ch) (recur (pop stack) (rest input))
+               (= (open->close (peek stack)) ch) (recur (pop stack) (rest input))
                :else (scores ch))
              0))
         lines))))
 
 (defn day10-part2 []
   (let [input
-        ; day10-test
-        (slurp "day10.txt")
+        day10-test
+        ; (slurp "day10.txt")
         lines (->> input
                    s/split-lines
                    (map s/trim))
         open-set (hash-set \[ \( \{ \<)
-        close-match {\[ \]
+        open->close {\[ \]
                      \( \)
                      \{ \}
                      \< \>}
@@ -512,30 +512,30 @@
                 \] 2
                 \} 3
                 \> 4}
-        closing-seqs (remove
-                       nil?
+        closing-seqs (->>
+                       lines
                        (map
                          #(loop [stack []
                                  input %]
                             (if-let [ch (first input)]
                               (cond
-                                (contains? open-set ch) (recur
-                                                          (conj stack ch)
-                                                          (rest input))
-                                (= (close-match (peek stack)) ch) (recur
-                                                                    (pop stack)
-                                                                    (rest input))
+                                (contains? open-set ch)
+                                (recur (conj stack ch) (rest input))
+
+                                (= (open->close (peek stack)) ch)
+                                (recur (pop stack) (rest input))
+
                                 :else nil)
-                              (->> stack
-                                   reverse
-                                   (map close-match))))
-                         lines))
+                              stack)))
+                       (remove nil?)
+                       (map reverse)
+                       (map #(map open->close %)))
         line-scores (map
-                      (fn [closing-seq]
-                        (reduce (fn [running-score ch]
-                                  (+ (scores ch) (* running-score 5)))
-                                0
-                                closing-seq))
+                      #(reduce
+                         (fn [running-score ch]
+                           (+ (scores ch) (* running-score 5)))
+                         0
+                         %)
                       closing-seqs)]
     (nth (sort line-scores) (/ (count line-scores) 2))))
 
