@@ -1,6 +1,7 @@
 (ns aoc2021.aoc2021
   (:require [clojure.string :as s]
             [clojure.core.matrix :as m]
+            [clojure.pprint :as pp]
             [clojure.set :as st])
   (:gen-class))
 
@@ -539,8 +540,98 @@
                       closing-seqs)]
     (nth (sort line-scores) (/ (count line-scores) 2))))
 
+(def day11-test "5483143223
+                2745854711
+                5264556173
+                6141336146
+                6357385478
+                4167524645
+                2176841721
+                6882881134
+                4846848554
+                5283751526")
+
+(letfn
+  [(inc-unflashed
+     ([n] (inc-unflashed n 1))
+     ([n i]
+      (if (= n \x) \x
+        (+ n i))))
+   (inc-levels [lines] (mapv (partial mapv inc-unflashed) lines))
+   (adjacent? [[x1 y1] [x2 y2]]
+     (and
+       (not (and (= x1 x2) (= y1 y2)))
+       (>= 1 (Math/abs (- x1 x2)))
+       (>= 1 (Math/abs (- y1 y2)))))
+   (find-flashes [lines]
+     (filter
+       #(let [n (get-in lines %)]
+          (and (number? n)
+               (< 9 n)))
+       (for [i (range (count lines))
+             j (range (count (first lines)))]
+         [i j])))
+   (reset-flashes [lines]
+     [(count (filter (partial = \x) (flatten lines)))
+      (mapv
+        (partial
+          mapv
+          #(if (= \x %) 0 %))
+        lines)])
+   (do-flashes [lines]
+     (let [flashes (find-flashes lines)]
+       (if (empty? flashes) (reset-flashes lines)
+         (recur
+           (mapv
+             (partial
+               mapv
+               (fn [pos]
+                 (cond
+                   (= \x (get-in lines pos)) \x
+                   (some (partial = pos) flashes) \x
+                   :else
+                   (inc-unflashed
+                     (get-in lines pos)
+                     (count (filter (partial adjacent? pos) flashes))))))
+             (for [i (range (count lines))]
+               (for [j (range (count (first lines)))]
+                 [i j])))))))
+   (step [[n lines]]
+     (let [[n-flashes new-lines] (-> lines
+                                     inc-levels
+                                     do-flashes)]
+       [(+ n n-flashes) new-lines]))
+   (find-sync
+     ([i lines] (find-sync i lines (count (flatten lines))))
+     ([i lines goal]
+      (let [[n-flashes new-lines]
+            (-> lines
+                inc-levels
+                do-flashes)]
+        (if (= goal n-flashes)
+          (inc i)
+          (recur (inc i) new-lines goal)))))]
+
+  (defn day11-part1 []
+    (let [input (slurp "day11.txt")
+          lines (->> input
+                     s/split-lines
+                     (map s/trim)
+                     (map (fn [line] (vec (map #(- (int %) 48) line))))
+                     vec)]
+      (first (nth (iterate step [0 lines]) 100))))
+
+  (defn day11-part2 []
+    (let [input (slurp "day11.txt")
+          lines (->> input
+                     s/split-lines
+                     (map s/trim)
+                     (map (fn [line] (vec (map #(- (int %) 48) line))))
+                     vec)]
+      (find-sync 0 lines))))
+
 (defn -main
   [& args]
-  ; (println (day10-part1))
-  (println (day10-part2)))
+  (pp/pprint (day11-part1))
+  (pp/pprint (day11-part2)))
 
