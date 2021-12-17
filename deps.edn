@@ -2,4 +2,12 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
         net.mikera/core.matrix {:mvn/version "0.62.0"}}
  :aliases
- {:run-m {:main-opts ["-m" "aoc2021.aoc2021"]}}}
+ {:run-m {:main-opts ["-m" "aoc2021.aoc2021"]}
+  :repl {:main-opts ["-e" (load-file "src/aoc2021/aoc2021.clj")
+                    "-e" (use 'aoc2021.aoc2021)
+                    "-e" (-main)]}
+  :repl-server {:exec-fn clojure.core.server/start-server
+                :exec-args {:name "repl-server"
+                            :port 5555
+                            :accept clojure.core.server/repl
+                            :server-daemon false}}}}
