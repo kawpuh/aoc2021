@@ -992,57 +992,34 @@ CN -> C")
 
 (defn day14-part2 []
   (let [input (slurp "day14.txt")
-        [template rules-lines] (s/split input #"\n\n")
+        [template-lines rules-lines] (s/split input #"\n\n")
+        template (frequencies
+                   (for [i (range 2 (inc (count template-lines)))]
+                     ; (nth template-lines (- i 2))
+                     (subs template-lines (- i 2) i)))
         rules (->> rules-lines
                    s/split-lines
                    (map #(s/split % #" -> "))
                    (into (hash-map)))
-        apply-rules (fn [rules template]
-                      (str
-                        (apply
-                          str
-                          (for [i (range 2 (inc (count template)))]
-                            (if-let [insertion (get rules (subs template (- i 2) i))]
-                              (str (nth template (- i 2)) insertion)
-                              (nth template (- i 2)))))
-                        (last template)))
-        iterate-rules (fn iterate-rules
-                        ([rules]
-                         (iterate-rules rules rules))
-                        ([rules applied-rules]
-                         (reduce
-                           (fn [new-rules [polymer insertion]]
-                             (let [pseudo-polymer (str (first polymer)
-                                                       insertion
-                                                       (last polymer))
-                                   pseudo-insertion (apply-rules applied-rules pseudo-polymer)]
-                               (assoc new-rules
-                                      polymer (subs pseudo-insertion
-                                                    1
-                                                    (dec (count pseudo-insertion))))))
-                           (hash-map)
-                           rules)))
-        four-step-rules (nth (iterate iterate-rules rules) 2)
-        sixteen-step-rules (nth (iterate iterate-rules rules) 4)
-        twenty-step-rules (iterate-rules four-step-rules sixteen-step-rules)
-        twenty-step-template (apply-rules twenty-step-rules template)
-        twenty-step-frequency-rules (->>
-                                      twenty-step-rules
-                                      (map (fn [[k v]] {k (frequencies v)}))
-                                      (apply merge))
-        fourty-step-frequencies
-        (reduce (partial merge-with +)
-                (frequencies twenty-step-template)
-                (for [i (range 2 (inc (count twenty-step-template)))]
-                  (get twenty-step-frequency-rules
-                       (subs twenty-step-template (- i 2) i))))]
-    (let [freq fourty-step-frequencies
-          [_most-char most-count] (apply max-key val freq)
+        apply-rules (fn [template]
+                      (apply
+                        merge-with +
+                        (for [[pair cnt] template]
+                          (if-let [insertion (get rules pair)]
+                            {(str (first pair) insertion) cnt
+                             (str insertion (second pair)) cnt}
+                            {pair cnt}))))
+        pairs (nth (iterate apply-rules template) 40)
+        freq (-> (apply
+                   merge-with +
+                   (for [[pair cnt] pairs]
+                     {(first pair) cnt}))
+                 (update (last template-lines) inc))]
+    (let [[_most-char most-count] (apply max-key val freq)
           [_least-char least-count] (apply min-key val freq)]
       (- most-count least-count))))
 
 (defn -main
   [& args]
-  (pp/pprint (day14-part2))
-  )
+  (pp/pprint (day14-part2)))
 
