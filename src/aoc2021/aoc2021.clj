@@ -416,10 +416,10 @@
                basin-sizes []
                queue []
                board lines
-               basin-size 0 ]
+               basin-size 0]
           (if (empty? queue)
             (let [basin-sizes (if (= 0 basin-size) basin-sizes
-                                (conj basin-sizes basin-size))]
+                                  (conj basin-sizes basin-size))]
               (if (empty? rem-starts)
                 basin-sizes
                 (recur (rest rem-starts)
@@ -431,28 +431,28 @@
                   pos (get-in board [x y] \x)]
               (cond
                 (= pos \x) (recur
-                             rem-starts
-                             basin-sizes
-                             (rest queue)
-                             board
-                             basin-size)
-                (= pos 9) (recur
                             rem-starts
                             basin-sizes
                             (rest queue)
                             board
                             basin-size)
+                (= pos 9) (recur
+                           rem-starts
+                           basin-sizes
+                           (rest queue)
+                           board
+                           basin-size)
                 :else
                 (recur
-                  rem-starts
-                  basin-sizes
-                  (concat [[(inc x) y]
-                           [(dec x) y]
-                           [x (inc y)]
-                           [x (dec y)]]
-                          (rest queue))
-                  (assoc-in board [x y] \x)
-                  (inc basin-size))))))]
+                 rem-starts
+                 basin-sizes
+                 (concat [[(inc x) y]
+                          [(dec x) y]
+                          [x (inc y)]
+                          [x (dec y)]]
+                         (rest queue))
+                 (assoc-in board [x y] \x)
+                 (inc basin-size))))))]
     (->> basin-sizes
          sort
          reverse
@@ -473,8 +473,8 @@
 (defn day10-part1 []
   (let [input (slurp "day10.txt")
         lines (->> input
-                  s/split-lines
-                  (map s/trim))
+                   s/split-lines
+                   (map s/trim))
         open-set (hash-set \[ \( \{ \<)
         open->close {\[ \]
                      \( \)
@@ -485,17 +485,17 @@
                 \} 1197
                 \> 25137}]
     (reduce
-      +
-      (map
-        #(loop [stack []
-                input %]
-           (if-let [ch (first input)]
-             (cond
-               (contains? open-set ch) (recur (conj stack ch) (rest input))
-               (= (open->close (peek stack)) ch) (recur (pop stack) (rest input))
-               :else (scores ch))
-             0))
-        lines))))
+     +
+     (map
+      #(loop [stack []
+              input %]
+         (if-let [ch (first input)]
+           (cond
+             (contains? open-set ch) (recur (conj stack ch) (rest input))
+             (= (open->close (peek stack)) ch) (recur (pop stack) (rest input))
+             :else (scores ch))
+           0))
+      lines))))
 
 (defn day10-part2 []
   (let [input
@@ -514,30 +514,30 @@
                 \} 3
                 \> 4}
         closing-seqs (->>
-                       lines
-                       (map
-                         #(loop [stack []
-                                 input %]
-                            (if-let [ch (first input)]
-                              (cond
-                                (contains? open-set ch)
-                                (recur (conj stack ch) (rest input))
+                      lines
+                      (map
+                       #(loop [stack []
+                               input %]
+                          (if-let [ch (first input)]
+                            (cond
+                              (contains? open-set ch)
+                              (recur (conj stack ch) (rest input))
 
-                                (= (open->close (peek stack)) ch)
-                                (recur (pop stack) (rest input))
+                              (= (open->close (peek stack)) ch)
+                              (recur (pop stack) (rest input))
 
-                                :else nil)
-                              stack)))
-                       (remove nil?)
-                       (map reverse)
-                       (map #(map open->close %)))
+                              :else nil)
+                            stack)))
+                      (remove nil?)
+                      (map reverse)
+                      (map #(map open->close %)))
         line-scores (map
-                      #(reduce
-                         (fn [running-score ch]
-                           (+ (scores ch) (* running-score 5)))
-                         0
-                         %)
-                      closing-seqs)]
+                     #(reduce
+                       (fn [running-score ch]
+                         (+ (scores ch) (* running-score 5)))
+                       0
+                       %)
+                     closing-seqs)]
     (nth (sort line-scores) (/ (count line-scores) 2))))
 
 (def day11-test "5483143223
@@ -552,65 +552,65 @@
                 5283751526")
 
 (letfn
-  [(inc-unflashed
-     ([n] (inc-unflashed n 1))
-     ([n i]
-      (if (= n \x) \x
-        (+ n i))))
-   (inc-levels [lines] (mapv (partial mapv inc-unflashed) lines))
-   (adjacent? [[x1 y1] [x2 y2]]
-     (and
-       (not (and (= x1 x2) (= y1 y2)))
-       (>= 1 (Math/abs (- x1 x2)))
-       (>= 1 (Math/abs (- y1 y2)))))
-   (find-flashes [lines]
-     (filter
-       #(let [n (get-in lines %)]
-          (and (number? n)
-               (< 9 n)))
-       (for [i (range (count lines))
-             j (range (count (first lines)))]
-         [i j])))
-   (reset-flashes [lines]
-     [(count (filter (partial = \x) (flatten lines)))
-      (mapv
-        (partial
-          mapv
-          #(if (= \x %) 0 %))
-        lines)])
-   (do-flashes [lines]
-     (let [flashes (find-flashes lines)]
-       (if (empty? flashes) (reset-flashes lines)
-         (recur
+ [(inc-unflashed
+    ([n] (inc-unflashed n 1))
+    ([n i]
+     (if (= n \x) \x
+         (+ n i))))
+  (inc-levels [lines] (mapv (partial mapv inc-unflashed) lines))
+  (adjacent? [[x1 y1] [x2 y2]]
+    (and
+     (not (and (= x1 x2) (= y1 y2)))
+     (>= 1 (Math/abs (- x1 x2)))
+     (>= 1 (Math/abs (- y1 y2)))))
+  (find-flashes [lines]
+    (filter
+     #(let [n (get-in lines %)]
+        (and (number? n)
+             (< 9 n)))
+     (for [i (range (count lines))
+           j (range (count (first lines)))]
+       [i j])))
+  (reset-flashes [lines]
+    [(count (filter (partial = \x) (flatten lines)))
+     (mapv
+      (partial
+       mapv
+       #(if (= \x %) 0 %))
+      lines)])
+  (do-flashes [lines]
+    (let [flashes (find-flashes lines)]
+      (if (empty? flashes) (reset-flashes lines)
+          (recur
            (mapv
-             (partial
-               mapv
-               (fn [pos]
-                 (cond
-                   (= \x (get-in lines pos)) \x
-                   (some (partial = pos) flashes) \x
-                   :else
-                   (inc-unflashed
-                     (get-in lines pos)
-                     (count (filter (partial adjacent? pos) flashes))))))
-             (for [i (range (count lines))]
-               (for [j (range (count (first lines)))]
-                 [i j])))))))
-   (step [[n lines]]
-     (let [[n-flashes new-lines] (-> lines
-                                     inc-levels
-                                     do-flashes)]
-       [(+ n n-flashes) new-lines]))
-   (find-sync
-     ([i lines] (find-sync i lines (count (flatten lines))))
-     ([i lines goal]
-      (let [[n-flashes new-lines]
-            (-> lines
-                inc-levels
-                do-flashes)]
-        (if (= goal n-flashes)
-          (inc i)
-          (recur (inc i) new-lines goal)))))]
+            (partial
+             mapv
+             (fn [pos]
+               (cond
+                 (= \x (get-in lines pos)) \x
+                 (some (partial = pos) flashes) \x
+                 :else
+                 (inc-unflashed
+                  (get-in lines pos)
+                  (count (filter (partial adjacent? pos) flashes))))))
+            (for [i (range (count lines))]
+              (for [j (range (count (first lines)))]
+                [i j])))))))
+  (step [[n lines]]
+    (let [[n-flashes new-lines] (-> lines
+                                    inc-levels
+                                    do-flashes)]
+      [(+ n n-flashes) new-lines]))
+  (find-sync
+    ([i lines] (find-sync i lines (count (flatten lines))))
+    ([i lines goal]
+     (let [[n-flashes new-lines]
+           (-> lines
+               inc-levels
+               do-flashes)]
+       (if (= goal n-flashes)
+         (inc i)
+         (recur (inc i) new-lines goal)))))]
 
   (defn day11-part1 []
     (let [input (slurp "day11.txt")
@@ -630,8 +630,225 @@
                      vec)]
       (find-sync 0 lines))))
 
+(def day12-test "fs-end
+                 he-DX
+                 fs-he
+                 start-DX
+                 pj-DX
+                 end-zg
+                 zg-sl
+                 zg-pj
+                 pj-he
+                 RW-he
+                 fs-DX
+                 pj-RW
+                 zg-RW
+                 start-pj
+                 he-WI
+                 zg-he
+                 pj-fs
+                 start-RW")
+
+(defn day12-part1 []
+  (let [input (slurp "day12.txt")
+        lines (->> input
+                   s/split-lines
+                   (map s/trim))
+        pairs (->> lines
+                   (map #(s/split % #"\-"))
+                   (map (partial map #(if (or (= % "start") (= % "end"))
+                                        (keyword %)
+                                        %))))
+        graph
+        (reduce
+         (partial merge-with st/union)
+         (reduce
+          concat
+          (for [[a b] pairs]
+            [{a (hash-set b)}
+             {b (hash-set a)}])))]
+    ; graph
+    (letfn [(all-adjacent-unvisited [path]
+              (let [curr (first path)]
+                (->>
+                 path
+                 (remove #(= % (s/upper-case %)))
+                 (set)
+                 (st/difference (get graph curr)))))
+            (find-partial-paths [path]
+              (for [adjacent (all-adjacent-unvisited path)]
+                (conj path adjacent)))
+            (find-all []
+              (loop [path (list)
+                     paths-queue (list (list :start))
+                     finished-paths (list)]
+                (if (= (first path) :end)
+                  (let [finished-paths (conj finished-paths path)]
+                    (if (empty? paths-queue)
+                      finished-paths
+                      (recur (first paths-queue) (rest paths-queue) finished-paths)))
+                  (recur (first paths-queue)
+                         (-> (rest paths-queue)
+                             (concat (find-partial-paths path)))
+                         finished-paths))))]
+      (count (find-all)))))
+
+#_(defn day12-part2 []
+    (let [input (slurp "day12.txt")
+          lines (->> input
+                     s/split-lines
+                     (map s/trim))
+          pairs (->> lines
+                     (map #(s/split % #"\-"))
+                     (map (partial map #(if (or (= % "start") (= % "end"))
+                                          (keyword %)
+                                          %))))
+          graph
+          (reduce
+           (partial merge-with st/union)
+           (reduce
+            concat
+            (for [[a b] pairs]
+              [{a (hash-set b)}
+               {b (hash-set a)}])))]
+      (letfn [(filter-visited [adjacent visited]
+                (->>
+                 visited
+                 (map first)
+                 (remove #(= % (s/upper-case %)))
+                 (set)
+                 (st/difference adjacent)))
+              (filter-uses-twice [adjacent visited]
+                nil
+                #_(->>
+                   visited
+                   (map first)
+                   (remove #(= % (s/upper-case %)))
+                   (set)
+                   (st/union adjacent)))
+              (all-eligible-adjacent [path]
+                (let [[curr twice-available?] (first path)]
+                  (into
+                   (when twice-available? (filter-uses-twice (get graph curr) path))
+                   (filter-visited (get graph curr) path))))
+              (find-partial-paths [path]
+                (for [adjacent (all-eligible-adjacent path)]
+                  (conj path adjacent)))
+              (find-all []
+                (loop [path (list)
+                       paths-queue (list (list (list :start true)))
+                       finished-paths (list)]
+                  (if (= (first path) :end)
+                    (let [finished-paths (conj finished-paths path)]
+                      (if (empty? paths-queue)
+                        finished-paths
+                        (recur (first paths-queue) (rest paths-queue) finished-paths)))
+                    (recur (first paths-queue)
+                           (-> (rest paths-queue)
+                               (concat (find-partial-paths path)))
+                           finished-paths))))]
+        (count (find-all)))))
+
+#_(defn day12-part2 []
+    (let [input (slurp "day12.txt")
+          lines (->> input
+                     s/split-lines
+                     (map s/trim))
+          pairs (->> lines
+                     (map #(s/split % #"\-"))
+                     (map (partial map #(if (or (= % "start") (= % "end"))
+                                          (keyword %)
+                                          %))))
+          graph
+          (reduce
+           (partial merge-with st/union)
+           (reduce
+            concat
+            (for [[a b] pairs]
+              [{a (hash-set b)}
+               {b (hash-set a)}])))]
+    ; graph
+      (letfn [(filter-visited [a b]
+                (st/difference a (set (remove #(= % (s/upper-case %)) b))))
+              (all-adjacent-unvisited [path]
+                (let [curr (first path)]
+                  (filter-visited (get graph curr) path)))
+              (find-partial-paths [path]
+                (for [adjacent (all-adjacent-unvisited path)]
+                  (conj path adjacent)))
+              (find-all []
+                (loop [path (list)
+                       paths-queue (list (list :start))
+                       finished-paths (list)]
+                  (if (= (first path) :end)
+                    (let [finished-paths (conj finished-paths path)]
+                      (if (empty? paths-queue)
+                        finished-paths
+                        (recur (first paths-queue) (rest paths-queue) finished-paths)))
+                    (recur (first paths-queue)
+                           (-> (rest paths-queue)
+                               (concat (find-partial-paths path)))
+                           finished-paths))))]
+        (count (find-all)))))
+
+(defn day12-part2 []
+  (let [input (slurp "day12.txt")
+        lines (->> input
+                   s/split-lines
+                   (map s/trim))
+        pairs (->> lines
+                   (map #(s/split % #"\-"))
+                   (map (partial map #(if (or (= % "start") (= % "end"))
+                                        (keyword %)
+                                        %))))
+        graph
+        (reduce
+         (partial merge-with st/union)
+         (reduce
+          concat
+          (for [[a b] pairs]
+            [{a (hash-set b)}
+             {b (hash-set a)}])))]
+    ; graph
+    (letfn [(all-adjacent-unvisited [path]
+              (let [[curr twice-available?] (first path)
+                    without-twice-rule (->>
+                                        path
+                                        (map first)
+                                        (remove #(= % (s/upper-case %)))
+                                        (set)
+                                        (st/difference (get graph curr))
+                                        (map #(list % twice-available?)))
+                    with-twice-rule (when twice-available?
+                                      (->>
+                                       path
+                                       (map first)
+                                       (filter #(= % (s/lower-case %)))
+                                       (set)
+                                       (st/intersection (get graph curr))
+                                       (map #(list % false))))]
+                (into with-twice-rule
+                      without-twice-rule)))
+            (find-partial-paths [path]
+              (for [adjacent (all-adjacent-unvisited path)]
+                (conj path adjacent)))
+            (find-all []
+              (loop [[[curr _twice-available?] :as path] (list)
+                     paths-queue (list (list (list :start true)))
+                     finished-paths (list)]
+                (if (= curr :end)
+                  (let [finished-paths (conj finished-paths curr)]
+                    (if (empty? paths-queue)
+                      finished-paths
+                      (recur (first paths-queue) (rest paths-queue) finished-paths)))
+                  (recur (first paths-queue)
+                         (-> (rest paths-queue)
+                             (into (find-partial-paths path)))
+                         finished-paths))))]
+      (count (find-all)))))
+
 (defn -main
   [& args]
-  (pp/pprint (day11-part1))
-  (pp/pprint (day11-part2)))
+  ; (pp/pprint (day12-part1))
+  (pp/pprint (day12-part2)))
 
