@@ -948,8 +948,101 @@
                             (if (contains? ending-paper (list x y)) \# \.)))))]
     display-paper))
 
+(def day14-test
+  "NNCB
+
+CH -> B
+HH -> N
+CB -> H
+NH -> C
+HB -> C
+HC -> B
+HN -> C
+NN -> C
+BH -> H
+NC -> B
+NB -> B
+BN -> B
+BB -> N
+BC -> B
+CC -> N
+CN -> C")
+
+(defn day14-part1 []
+  (let [input (slurp "day14.txt")
+        [template rules-lines] (s/split input #"\n\n")
+        rules (->> rules-lines
+                   s/split-lines
+                   (map #(s/split % #" -> "))
+                   (into (hash-map)))
+        apply-rules (fn [template]
+                      (str
+                        (apply
+                          str
+                          (for [i (range 2 (inc (count template)))]
+                            (if-let [insertion (get rules (subs template (- i 2) i))]
+                              (str (nth template (- i 2)) insertion)
+                              (nth template (- i 2)))))
+                      (last template)))
+        polymer (nth (iterate apply-rules template) 10)]
+    (let [freq (frequencies polymer)
+          [_most-char most-count] (apply max-key val freq)
+          [_least-char least-count] (apply min-key val freq)]
+      (- most-count least-count))))
+
+(defn day14-part2 []
+  (let [input (slurp "day14.txt")
+        [template rules-lines] (s/split input #"\n\n")
+        rules (->> rules-lines
+                   s/split-lines
+                   (map #(s/split % #" -> "))
+                   (into (hash-map)))
+        apply-rules (fn [rules template]
+                      (str
+                        (apply
+                          str
+                          (for [i (range 2 (inc (count template)))]
+                            (if-let [insertion (get rules (subs template (- i 2) i))]
+                              (str (nth template (- i 2)) insertion)
+                              (nth template (- i 2)))))
+                        (last template)))
+        iterate-rules (fn iterate-rules
+                        ([rules]
+                         (iterate-rules rules rules))
+                        ([rules applied-rules]
+                         (reduce
+                           (fn [new-rules [polymer insertion]]
+                             (let [pseudo-polymer (str (first polymer)
+                                                       insertion
+                                                       (last polymer))
+                                   pseudo-insertion (apply-rules applied-rules pseudo-polymer)]
+                               (assoc new-rules
+                                      polymer (subs pseudo-insertion
+                                                    1
+                                                    (dec (count pseudo-insertion))))))
+                           (hash-map)
+                           rules)))
+        four-step-rules (nth (iterate iterate-rules rules) 2)
+        sixteen-step-rules (nth (iterate iterate-rules rules) 4)
+        twenty-step-rules (iterate-rules four-step-rules sixteen-step-rules)
+        twenty-step-template (apply-rules twenty-step-rules template)
+        twenty-step-frequency-rules (->>
+                                      twenty-step-rules
+                                      (map (fn [[k v]] {k (frequencies v)}))
+                                      (apply merge))
+        fourty-step-frequencies
+        (reduce (partial merge-with +)
+                (frequencies twenty-step-template)
+                (for [i (range 2 (inc (count twenty-step-template)))]
+                  (get twenty-step-frequency-rules
+                       (subs twenty-step-template (- i 2) i))))]
+    (let [freq fourty-step-frequencies
+          [_most-char most-count] (apply max-key val freq)
+          [_least-char least-count] (apply min-key val freq)]
+      (- most-count least-count))))
+
 (defn -main
   [& args]
-  (pp/pprint (day13-part1))
-  (println (day13-part2)))
+  (pp/pprint (day14-part2))
+  )
 
