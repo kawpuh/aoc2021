@@ -847,8 +847,109 @@
                          finished-paths))))]
       (count (find-all)))))
 
+(def day13-test "6,10
+                0,14
+                9,10
+                0,3
+                10,4
+                4,11
+                6,0
+                6,12
+                4,1
+                0,13
+                10,12
+                3,4
+                3,0
+                8,4
+                1,10
+                2,14
+                8,10
+                9,0
+
+                fold along y=7
+                fold along x=5")
+
+(defn day13-part1 []
+  (let [input
+        (slurp "day13.txt")
+        ; day13-test
+        [dot-lines fold-lines]
+        (-> input
+            (s/split #"\n\n")
+            (->> (map s/split-lines)
+                 (map (partial map s/trim))))
+        dots (->> dot-lines
+                  (map #(s/split % #"\,"))
+                  (map (partial map read-string)))
+        folds (->> fold-lines
+                   (map (partial re-find #"\S+$"))
+                   (map #(s/split % #"="))
+                   (map (fn [[axis n]] (list (keyword axis) (read-string n)))))]
+    (-> (reduce
+         (fn [dots [axis n]]
+           (for [[x y] dots]
+             (list
+              (if-not (= axis :x) x
+                      (if (> n x)
+                        x
+                        (- n (- x n))))
+              (if-not (= axis :y) y
+                      (if (> n y)
+                        y
+                        (- n (- y n)))))))
+         dots
+         (list (first folds)))
+        set
+        count)))
+
+(defn day13-part2 []
+  (let [input (slurp "day13.txt")
+        [dot-lines fold-lines]
+        (-> input
+            (s/split #"\n\n")
+            (->> (map s/split-lines)
+                 (map (partial map s/trim))))
+        dots (->> dot-lines
+                  (map #(s/split % #"\,"))
+                  (map (partial map read-string)))
+        folds (->> fold-lines
+                   (map (partial re-find #"\S+$"))
+                   (map #(s/split % #"="))
+                   (map (fn [[axis n]] (list (keyword axis) (read-string n)))))
+        ending-paper (-> (reduce
+                          (fn [dots [axis n]]
+                            (for [[x y] dots]
+                              (list
+                               (if-not (= axis :x) x
+                                       (if (> n x)
+                                         x
+                                         (- n (- x n))))
+                               (if-not (= axis :y) y
+                                       (if (> n y)
+                                         y
+                                         (- n (- y n)))))))
+                          dots
+                          folds)
+                         set)
+        display-paper (s/join
+                       "\n"
+                       (for [y (->> ending-paper
+                                    (map second)
+                                    (apply max)
+                                    inc
+                                    range)]
+                         (apply
+                          str
+                          (for [x (->> ending-paper
+                                       (map first)
+                                       (apply max)
+                                       inc
+                                       range)]
+                            (if (contains? ending-paper (list x y)) \# \.)))))]
+    display-paper))
+
 (defn -main
   [& args]
-  ; (pp/pprint (day12-part1))
-  (pp/pprint (day12-part2)))
+  (pp/pprint (day13-part1))
+  (println (day13-part2)))
 
