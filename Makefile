@@ -8,4 +8,5 @@ start-server:
 	clj -X:repl-server
 
 watch-server:
-	echo "src/aoc2021/aoc2021.clj" | entr -c sh -c "echo \"(load-file \\\"src/aoc2021/aoc2021.clj\\\")\n(use 'aoc2021.aoc2021)\n(-main)\" | nc -N localhost 5555"
+	echo "(require '[clojure.tools.namespace.repl :refer [refresh]]) (load-file \"src/aoc2021/aoc2021.clj\") (use 'aoc2021.aoc2021) (-main)" | nc -N localhost 5555;
+	echo "src/aoc2021/aoc2021.clj" | entr -c sh -c "echo \"(refresh) (-main)\" | nc -N localhost 5555";

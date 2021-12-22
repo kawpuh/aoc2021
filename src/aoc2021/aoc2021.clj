@@ -920,14 +920,14 @@
                           (fn [dots [axis n]]
                             (for [[x y] dots]
                               (list
-                               (if-not (= axis :x) x
-                                       (if (> n x)
-                                         x
-                                         (- n (- x n))))
-                               (if-not (= axis :y) y
-                                       (if (> n y)
-                                         y
-                                         (- n (- y n)))))))
+                               (cond
+                                 (not (= axis :x)) x
+                                 (> n x) x
+                                 :else (- n (- x n)))
+                               (cond
+                                 (not (= axis :y)) y
+                                 (> n y) y
+                                 :else  (- n (- y n))))))
                           dots
                           folds)
                          set)
@@ -977,13 +977,13 @@ CN -> C")
                    (into (hash-map)))
         apply-rules (fn [template]
                       (str
-                        (apply
-                          str
-                          (for [i (range 2 (inc (count template)))]
-                            (if-let [insertion (get rules (subs template (- i 2) i))]
-                              (str (nth template (- i 2)) insertion)
-                              (nth template (- i 2)))))
-                      (last template)))
+                       (apply
+                        str
+                        (for [i (range 2 (inc (count template)))]
+                          (if-let [insertion (get rules (subs template (- i 2) i))]
+                            (str (nth template (- i 2)) insertion)
+                            (nth template (- i 2)))))
+                       (last template)))
         polymer (nth (iterate apply-rules template) 10)]
     (let [freq (frequencies polymer)
           [_most-char most-count] (apply max-key val freq)
@@ -994,26 +994,25 @@ CN -> C")
   (let [input (slurp "day14.txt")
         [template-lines rules-lines] (s/split input #"\n\n")
         template (frequencies
-                   (for [i (range 2 (inc (count template-lines)))]
-                     ; (nth template-lines (- i 2))
-                     (subs template-lines (- i 2) i)))
+                  (for [i (range 2 (inc (count template-lines)))]
+                    (subs template-lines (- i 2) i)))
         rules (->> rules-lines
                    s/split-lines
                    (map #(s/split % #" -> "))
                    (into (hash-map)))
         apply-rules (fn [template]
                       (apply
-                        merge-with +
-                        (for [[pair cnt] template]
-                          (if-let [insertion (get rules pair)]
-                            {(str (first pair) insertion) cnt
-                             (str insertion (second pair)) cnt}
-                            {pair cnt}))))
+                       merge-with +
+                       (for [[pair cnt] template]
+                         (if-let [insertion (get rules pair)]
+                           {(str (first pair) insertion) cnt
+                            (str insertion (second pair)) cnt}
+                           {pair cnt}))))
         pairs (nth (iterate apply-rules template) 40)
         freq (-> (apply
-                   merge-with +
-                   (for [[pair cnt] pairs]
-                     {(first pair) cnt}))
+                  merge-with +
+                  (for [[pair cnt] pairs]
+                    {(first pair) cnt}))
                  (update (last template-lines) inc))]
     (let [[_most-char most-count] (apply max-key val freq)
           [_least-char least-count] (apply min-key val freq)]
@@ -1021,5 +1020,5 @@ CN -> C")
 
 (defn -main
   [& args]
-  (pp/pprint (day14-part2)))
+  (println (day13-part1)))
 

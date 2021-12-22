@@ -1,0 +1,10 @@
+{:tasks
+ {:requires ([babashka.process :as p])
+  runner (clojure "-M:run-m")
+  watcher (shell (str "echo \"src/aoc2021/aoc2021.clj\" |"
+                      "entr -cr clojure -M:run-m"))
+
+  #_(-> (p/process ["echo" "src/aoc2021/aoc2021.clj"])
+              (p/process '[entr -cr clojure -M:run-m] {:out :inherit})
+              println)
+  }}
