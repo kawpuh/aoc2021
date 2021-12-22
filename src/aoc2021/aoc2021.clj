@@ -1018,7 +1018,126 @@ CN -> C")
           [_least-char least-count] (apply min-key val freq)]
       (- most-count least-count))))
 
+(def day15-test "1163751742
+1381373672
+2136511328
+3694931569
+7463417111
+1319128137
+1359912421
+3125421639
+1293138521
+2311944581")
+
+(defn day15-part1 []
+  (let [input
+        (slurp "day15.txt")
+        ; day15-test
+        lines (->> input
+                   s/split-lines
+                   (mapv (partial mapv (comp read-string str))))
+        dims (list (count lines) (count (first lines)))
+        adjacent-pos (fn [pos]
+                       (for [diff (list (list 0 1)
+                                        (list 0 -1)
+                                        (list 1 0)
+                                        (list -1 0))
+                             :let [adj (list (+ (first diff) (first pos))
+                                             (+ (second diff) (second pos)))]
+
+                             :when (and (< -1 (first adj) (first dims))
+                                        (< -1 (second adj) (second dims)))]
+                         adj))
+        dijkstra (loop [mins (hash-map (list 0 0) 0)
+                        queue (conj clojure.lang.PersistentQueue/EMPTY (list 0 0))]
+                   (if (empty? queue) mins
+                       (let [pos (peek queue)
+                             queue (pop queue)
+                             risk (get mins pos)
+                             adjs (adjacent-pos pos)
+                             min-adjacents (for [adj adjs
+                                                 :let [old-min (get mins adj nil)
+                                                       step-risk (get-in lines adj)
+                                                       new-risk (+ risk step-risk)]
+                                                 :when (or (not old-min)
+                                                           (> old-min new-risk))]
+                                             (list adj new-risk))]
+                         (recur
+                           (reduce
+                             (fn [mins [pos new-min]]
+                               (assoc mins pos new-min))
+                             mins
+                             min-adjacents)
+                           (reduce
+                             (fn [queue [pos _]]
+                               (conj queue pos))
+                             queue
+                             min-adjacents)))))
+        ]
+    (get dijkstra (map dec dims))))
+
+(defn day15-part2 []
+  (let [input
+        (slurp "day15.txt")
+        ; day15-test
+        lines (->> input
+                   s/split-lines
+                   (mapv (partial mapv (comp read-string str))))
+        original-dims (list (count lines) (count (first lines)))
+        fake-inc (fn [n] (if (= 9 n) 1 (inc n)))
+        board (into
+                (hash-map)
+                (for [x-mult (range 5)
+                      y-mult (range 5)
+                      x (range (first original-dims))
+                      y (range (second original-dims))
+                      :let [original (get-in lines (list x y))
+                            new-val (nth (iterate fake-inc original)
+                                         (+ x-mult y-mult))]]
+                  [(list (+ x (* (first original-dims) x-mult))
+                         (+ y (* (second original-dims) y-mult)))
+                   new-val]))
+        dims (map (partial * 5) original-dims)
+        adjacent-pos (fn [pos]
+                       (for [diff (list (list 0 1)
+                                        (list 0 -1)
+                                        (list 1 0)
+                                        (list -1 0))
+                             :let [adj (list (+ (first diff) (first pos))
+                                             (+ (second diff) (second pos)))]
+
+                             :when (and (< -1 (first adj) (first dims))
+                                        (< -1 (second adj) (second dims)))]
+                         adj))
+        dijkstra (loop [mins (hash-map (list 0 0) 0)
+                        queue (conj clojure.lang.PersistentQueue/EMPTY (list 0 0))]
+                   (if (empty? queue) mins
+                     (let [pos (peek queue)
+                           queue (pop queue)
+                           risk (get mins pos)
+                           adjs (adjacent-pos pos)
+                           min-adjacents (for [adj adjs
+                                               :let [old-min (get mins adj nil)
+                                                     step-risk (get board adj)
+                                                     new-risk (+ risk step-risk)]
+                                               :when (or (not old-min)
+                                                         (> old-min new-risk))]
+                                           (list adj new-risk))]
+                       (recur
+                         (reduce
+                           (fn [mins [pos new-min]]
+                             (assoc mins pos new-min))
+                           mins
+                           min-adjacents)
+                         (reduce
+                           (fn [queue [pos _]]
+                             (conj queue pos))
+                           queue
+                           min-adjacents)))))]
+    (get dijkstra (map dec dims))))
+
 (defn -main
   [& args]
-  (println (day13-part1)))
+  (println (day15-part2))
+  )
 
